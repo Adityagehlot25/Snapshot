@@ -27,6 +27,18 @@ export default function SuggestionsPanel({ data }) {
               <span>White Balance:</span> 
               <strong className="capitalize">{suggestions.white_balance}</strong>
             </li>
+            <li>
+              <span>Saturation:</span> 
+              <strong>{suggestions.saturation}</strong>
+            </li>
+            <li>
+              <span>Temperature:</span> 
+              <strong className="capitalize">{suggestions.temperature}</strong>
+            </li>
+            <li>
+              <span>Tint:</span> 
+              <strong className="capitalize">{suggestions.tint}</strong>
+            </li>
           </ul>
         </div>
 
