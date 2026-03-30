@@ -2,7 +2,7 @@ import { useState } from 'react';
 import UploadBox from './components/UploadBox';
 import ImagePreview from './components/ImagePreview';
 import SuggestionsPanel from './components/SuggestionsPanel';
-import './App.css';
+import './App.css'; // Or index.css, whichever you are currently using
 
 export default function App() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -48,7 +48,11 @@ export default function App() {
           </div>
         )}
 
-        <ImagePreview imageFile={selectedFile} />
+        {/* Pass both the original file and the enhanced base64 string (if available) */}
+        <ImagePreview 
+          imageFile={selectedFile} 
+          enhancedImage={analysisData?.enhanced_image} 
+        />
         
         {isLoading && (
           <div className="loading-state card">

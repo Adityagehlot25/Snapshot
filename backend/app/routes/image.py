@@ -11,7 +11,8 @@ router = APIRouter(
 async def analyze_image_endpoint(file: UploadFile = File(...)):
     """
     Receives an image file, saves it, and returns computed visual metrics
-    along with a human-readable explanation and camera adjustment suggestions.
+    along with a human-readable explanation, camera adjustment suggestions, 
+    and a base64-encoded auto-enhanced version of the image.
     """
     # Pass the file directly to the service layer
     response = await process_image(file)

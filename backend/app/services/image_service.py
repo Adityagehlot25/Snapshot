@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import base64
 from fastapi import UploadFile, HTTPException
 from app.utils.file_handler import save_uploaded_file
 
@@ -13,11 +14,19 @@ def _generate_explanation(brightness: float, contrast: float) -> str:
     
     return f"Image is {exposure_text} and {contrast_text}."
 
+def _encode_image_to_base64(img: np.ndarray) -> str:
+    """Helper function to encode an OpenCV image to a base64 string."""
+    success, buffer = cv2.imencode('.jpg', img)
+    if not success:
+        raise ValueError("Failed to encode the enhanced image.")
+    # Convert buffer to base64 string
+    return base64.b64encode(buffer).decode('utf-8')
+
 async def process_image(file: UploadFile) -> dict:
     """
     Business logic for processing an incoming image upload.
     Validates the file, saves it locally, computes OpenCV metrics,
-    and generates camera adjustment suggestions.
+    generates camera adjustment suggestions, and creates an auto-enhanced version.
     """
     # Basic validation: ensure the file has an image content type
     if not file.content_type or not file.content_type.startswith("image/"):
@@ -48,7 +57,7 @@ async def process_image(file: UploadFile) -> dict:
         )
 
     try:
-        # 2. Compute metrics
+        # 2. Compute metrics on the ORIGINAL image
         # Cast NumPy floats to Python floats for JSON serialization
         brightness = float(np.mean(img))
         contrast = float(np.std(img))
@@ -89,7 +98,14 @@ async def process_image(file: UploadFile) -> dict:
         # 6. Generate Explanation
         explanation = _generate_explanation(brightness, contrast)
 
-        # 7. Return the formatted JSON payload
+        # 7. Apply Auto Enhancement
+        # Adjusting alpha (contrast) and beta (brightness)
+        new_img = cv2.convertScaleAbs(img, alpha=1.2, beta=20)
+
+        # 8. Encode the enhanced image to Base64
+        enhanced_image_b64 = _encode_image_to_base64(new_img)
+
+        # 9. Return the formatted JSON payload
         return {
             "brightness": round(brightness, 2),
             "contrast": round(contrast, 2),
@@ -104,7 +120,8 @@ async def process_image(file: UploadFile) -> dict:
                 "contrast": contrast_suggestion,
                 "white_balance": white_balance
             },
-            "explanation": explanation
+            "explanation": explanation,
+            "enhanced_image": enhanced_image_b64
         }
 
     except Exception as e:
