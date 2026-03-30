@@ -1,4 +1,4 @@
-# Virtual Environment
+# Virtual Environment (Python)
 venv/
 env/
 ENV/
@@ -15,6 +15,14 @@ dist/
 build/
 .Python
 
+# Node.js / npm (Frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+.vite/
+
 # IDE
 .vscode/
 .idea/
@@ -22,6 +30,8 @@ build/
 *.swo
 *~
 .DS_Store
+.project
+.classpath
 
 # Environment variables
 .env
@@ -39,3 +49,7 @@ Thumbs.db
 # IDE local config
 *.code-workspace
 .vscode/settings.json
+
+# Vite
+dist/
+.vite/
