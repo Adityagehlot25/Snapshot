@@ -30,7 +30,7 @@ export default function App() {
   return (
     <div className="app-container">
       <header className="header">
-        <h1>AI Photo Assistant</h1>
+        <h1 style={{ color: '#0f172a' }}>AI Photo Assistant</h1>
         <p>Optimize your camera settings instantly</p>
       </header>
 

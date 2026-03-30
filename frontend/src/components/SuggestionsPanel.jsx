@@ -5,11 +5,17 @@ export default function SuggestionsPanel({ data }) {
 
   return (
     <div className="card suggestions-panel">
-      <h2>Analysis Results</h2>
+      <h2 style={{ color: '#0f172a' }}>Analysis Results</h2>
       
-      <div className="explanation-box">
-        <strong>Diagnosis:</strong> {explanation}
-      </div>
+      {/* Conditionally render the AI explanation prominently at the top */}
+      {explanation && (
+        <div className="explanation-box">
+          <div style={{ marginBottom: '0.5rem', fontSize: '1.05rem' }}>
+            <strong>💡 AI Diagnosis</strong>
+          </div>
+          <div>{explanation}</div>
+        </div>
+      )}
 
       <div className="grid-layout">
         <div className="metric-group">

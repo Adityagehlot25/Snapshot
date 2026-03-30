@@ -27,7 +27,7 @@ export default function UploadBox({ onUploadStart, onUploadSuccess, onUploadErro
 
   return (
     <div className="card upload-box">
-      <h2>Upload Image</h2>
+      <h2 style={{ color: '#0f172a' }}>Upload Image</h2>
       <p>Select a photo to get AI-powered camera adjustment suggestions.</p>
       
       <div className="file-input-wrapper">

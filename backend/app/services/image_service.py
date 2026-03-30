@@ -1,18 +1,49 @@
 import cv2
 import numpy as np
 import base64
+import uuid
+import os
 from fastapi import UploadFile, HTTPException
 from app.utils.file_handler import save_uploaded_file
 
-def _generate_explanation(brightness: float, contrast: float) -> str:
-    """Helper function to generate a human-readable explanation."""
-    if 80 <= brightness <= 180 and 40 <= contrast <= 80:
-        return "Image has balanced lighting and normal contrast."
-    
-    exposure_text = "underexposed" if brightness < 80 else "overexposed" if brightness > 180 else "normally exposed"
-    contrast_text = "lacks contrast" if contrast < 40 else "has high contrast" if contrast > 80 else "has normal contrast"
-    
-    return f"Image is {exposure_text} and {contrast_text}."
+def _generate_explanation(brightness: float, contrast: float, avg_saturation: float, temperature_suggestion: str, tint_suggestion: str) -> str:
+    """Helper function to generate a human-readable, intelligent explanation from image metrics."""
+    sentences = []
+
+    # 1. Exposure and Contrast
+    if brightness < 80:
+        sentences.append("The image is underexposed, making it appear dark and lacking detail.")
+    elif brightness > 180:
+        sentences.append("The image is overexposed, causing loss of details in bright areas.")
+        
+    if contrast < 40:
+        sentences.append("It has low contrast, making it look flat.")
+    elif contrast > 80:
+        sentences.append("It has high contrast, which may cause harsh shadows.")
+
+    # 2. Color and Saturation
+    if avg_saturation < 80:
+        sentences.append("Colors appear dull and less vibrant.")
+    elif avg_saturation > 180:
+        sentences.append("Colors may look overly intense.")
+
+    # 3. Tone and Tint
+    if temperature_suggestion == "cooler":
+        sentences.append("The image has a cool tone with a bluish feel.")
+    elif temperature_suggestion == "warmer":
+        sentences.append("The image has a warm tone with a reddish feel.")
+        
+    if tint_suggestion == "green":
+        sentences.append("There is a noticeable green color cast.")
+    elif tint_suggestion == "magenta":
+        sentences.append("There is a noticeable magenta color cast.")
+
+    # 4. Fallback for balanced images
+    if not sentences:
+        return "The image has balanced lighting, normal contrast, and natural colors."
+
+    # Join the sentences smoothly
+    return " ".join(sentences)
 
 def _encode_image_to_base64(img: np.ndarray) -> str:
     """Helper function to encode an OpenCV image to a base64 string."""
@@ -131,8 +162,14 @@ async def process_image(file: UploadFile) -> dict:
             tint_suggestion = "balanced"
             tint_adjust = 0
 
-        # 9. Generate Explanation
-        explanation = _generate_explanation(brightness, contrast)
+        # 9. Generate Intelligent Explanation
+        explanation = _generate_explanation(
+            brightness, 
+            contrast, 
+            avg_saturation, 
+            temperature_suggestion, 
+            tint_suggestion
+        )
 
         # 10. Apply Auto Enhancement (Subtle & Conditional)
         enhancement_applied = False
@@ -182,10 +219,17 @@ async def process_image(file: UploadFile) -> dict:
                 
             new_img = cv2.merge((b_idx, g_idx, r_idx))
 
-        # 11. Encode the resulting image to Base64
+        # 11. Save the Enhanced Image Locally
+        os.makedirs("uploads", exist_ok=True)
+        unique_filename = f"enhanced_{uuid.uuid4().hex}.jpg"
+        save_path = os.path.join("uploads", unique_filename)
+        cv2.imwrite(save_path, new_img)
+        enhanced_image_url = f"/uploads/{unique_filename}"
+
+        # 12. Encode the resulting image to Base64 (Optional, kept for backward compatibility)
         enhanced_image_b64 = _encode_image_to_base64(new_img)
 
-        # 12. Return the formatted JSON payload
+        # 13. Return the formatted JSON payload
         return {
             "brightness": round(brightness, 2),
             "contrast": round(contrast, 2),
@@ -205,7 +249,8 @@ async def process_image(file: UploadFile) -> dict:
             },
             "explanation": explanation,
             "enhancement_applied": enhancement_applied,
-            "enhanced_image": enhanced_image_b64
+            "enhanced_image": enhanced_image_b64,
+            "enhanced_image_url": enhanced_image_url
         }
 
     except Exception as e:
