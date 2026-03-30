@@ -3,10 +3,21 @@ import numpy as np
 from fastapi import UploadFile, HTTPException
 from app.utils.file_handler import save_uploaded_file
 
+def _generate_explanation(brightness: float, contrast: float) -> str:
+    """Helper function to generate a human-readable explanation."""
+    if 80 <= brightness <= 180 and 40 <= contrast <= 80:
+        return "Image has balanced lighting and normal contrast."
+    
+    exposure_text = "underexposed" if brightness < 80 else "overexposed" if brightness > 180 else "normally exposed"
+    contrast_text = "lacks contrast" if contrast < 40 else "has high contrast" if contrast > 80 else "has normal contrast"
+    
+    return f"Image is {exposure_text} and {contrast_text}."
+
 async def process_image(file: UploadFile) -> dict:
     """
     Business logic for processing an incoming image upload.
-    Validates the file, saves it locally, and computes OpenCV metrics.
+    Validates the file, saves it locally, computes OpenCV metrics,
+    and generates camera adjustment suggestions.
     """
     # Basic validation: ensure the file has an image content type
     if not file.content_type or not file.content_type.startswith("image/"):
@@ -51,12 +62,34 @@ async def process_image(file: UploadFile) -> dict:
         # 3. Exposure Detection Logic
         if brightness < 80:
             exposure = "underexposed"
+            brightness_suggestion = "+20"
         elif brightness > 180:
             exposure = "overexposed"
+            brightness_suggestion = "-15"
         else:
             exposure = "normal"
+            brightness_suggestion = "0"
 
-        # 4. Return the formatted JSON payload
+        # 4. Contrast Suggestion Logic
+        if contrast < 40:
+            contrast_suggestion = "+15"
+        elif contrast > 80:
+            contrast_suggestion = "-10"
+        else:
+            contrast_suggestion = "0"
+
+        # 5. White Balance Suggestion Logic
+        if avg_b > avg_r:
+            white_balance = "warmer"
+        elif avg_r > avg_b:
+            white_balance = "cooler"
+        else:
+            white_balance = "balanced"
+
+        # 6. Generate Explanation
+        explanation = _generate_explanation(brightness, contrast)
+
+        # 7. Return the formatted JSON payload
         return {
             "brightness": round(brightness, 2),
             "contrast": round(contrast, 2),
@@ -65,7 +98,13 @@ async def process_image(file: UploadFile) -> dict:
                 "g": round(avg_g, 2),
                 "b": round(avg_b, 2)
             },
-            "exposure": exposure
+            "exposure": exposure,
+            "suggestions": {
+                "brightness": brightness_suggestion,
+                "contrast": contrast_suggestion,
+                "white_balance": white_balance
+            },
+            "explanation": explanation
         }
 
     except Exception as e:
