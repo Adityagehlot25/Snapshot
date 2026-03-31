@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+// Get backend URL from environment variables, fallback to localhost for development
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+
 // Create an Axios instance pointing to your FastAPI backend
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: BACKEND_URL,
 });
 
 export const analyzeImage = async (file) => {

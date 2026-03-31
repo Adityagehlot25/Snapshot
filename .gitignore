@@ -40,14 +40,53 @@ build/
 
 # Uploads
 uploads/
+uploads/*
+!uploads/.gitkeep
 *.tmp
 
 # OS
 Thumbs.db
 .DS_Store
+.AppleDouble
+.LSOverride
+*.localized
 
 # IDE local config
 *.code-workspace
+.vscode/settings.json
+.vscode/launch.json
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.nyc_output/
+
+# Logs
+*.log
+logs/
+debug.log*
+
+# Temporary files
+*.bak
+*.swp
+*~
+.DS_Store
+
+# Production builds
+backend/build/
+backend/dist/
+frontend/dist/
+frontend/build/
+
+# Package managers
+package-lock.json
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Mac
+.AppleDouble
+.LSOverride
 .vscode/settings.json
 
 # Vite
