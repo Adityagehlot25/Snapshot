@@ -17,7 +17,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 if ENVIRONMENT == "production":
     # Production: Allow frontend URL
     origins = [
-        os.getenv("FRONTEND_URL", "https://your-frontend.vercel.app"),
+        os.getenv("FRONTEND_URL", "https://neurolens-frontend.vercel.app"),
     ]
 else:
     # Development: Allow localhost variants
